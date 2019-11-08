@@ -18,21 +18,34 @@ class SenSemEvalDataSet(Dataset):
     Sentence level SemEval2020 task6 data set
     """
 
-    def __init__(self, data_path, w2v_path, emb_dim, padding=False, max_sen_len=150, is_gpu=cuda.is_available()):
+    def __init__(self, data_path, w2v_path, emb_dim, padding=False, max_sen_len=None, is_gpu=cuda.is_available()):
         self.is_gpu = is_gpu
         self.data_fetcher = SenSemEvalHelper(data_path, w2v_path, emb_dim, padding, max_sen_len)
         self.x = self.data_fetcher.data_x
         self.y = self.data_fetcher.data_y
         self.num_data = self.y.shape[0]
         self.word_embedding = self.data_fetcher.word_embedding
+        self.max_sen_len = max_sen_len
 
     def __getitem__(self, index):
+        x_i, y_i = self.x[index], self.y[index]
+        if self.max_sen_len is not None:
+            x_i = self.pad(x_i, self.max_sen_len)
         if self.is_gpu:
-            return torch.LongTensor(self.x[index]).cuda(), torch.LongTensor(self.y[index]).cuda()
-        return self.data_fetcher.data_x[index], self.data_fetcher.data_y[index]
+            return torch.LongTensor(x_i).cuda(), torch.LongTensor(y_i).cuda()
+        return x_i, y_i
 
     def __len__(self):
         return self.data_fetcher.data_y.shape[0]
+
+    def pad(self, sen, max_sen_len):
+        """
+        为了cnn中句子长度一致(rnn可以不用)
+        sen: numpy array
+        :return: numpy array
+        """
+        padding = np.zeros((max_sen_len - sen.shape[0]), dtype=int)
+        return np.hstack((sen, padding))
 
 
 class SenSemEvalHelper(DataFetcher):
