@@ -8,14 +8,12 @@ import copy
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 import attention, layers
-from tensor_model_class import TensorModel
+from sen_tensor_model_class import SenTensorModel
 
 
-class CnnAttnModel(TensorModel):
+class CnnAttnModel(SenTensorModel):
 
     def __init__(self,
                  train_data_set,
@@ -24,11 +22,13 @@ class CnnAttnModel(TensorModel):
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
                  model_save_path="../trained_model/cnn_model.pt"):
-        super(CnnAttnModel, self).__init__(train_data_set, test_data_set, hyper_parameter)
-        self.train_requirement = train_requirement  # include: batch_size, num_epoch, lr_rate, etc
+        super(CnnAttnModel, self).__init__(train_data_set,
+                                           test_data_set,
+                                           hyper_parameter,
+                                           train_requirement,
+                                           is_gpu,
+                                           model_save_path)
         self.batch_size = self.train_requirement["batch_size"]
-        self.is_gpu = is_gpu
-        self.model_save_path = model_save_path
         self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
         self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
         self.model = self.build_model()
@@ -36,11 +36,6 @@ class CnnAttnModel(TensorModel):
             self.model = self.model.cuda()
         self.train_test()
         # self.load_test()
-
-    def train_test(self):
-        self.train()
-        self.save_model()
-        self.test()
 
     def build_model(self):
         d_w, num_filter, window_size, num_heads, hidden_dim, num_layers, dropout = self.extract_hyper_parameters()
@@ -64,80 +59,6 @@ class CnnAttnModel(TensorModel):
                self.hyper_parameter["hidden_dim"], \
                self.hyper_parameter["num_layers"], \
                self.hyper_parameter["dropout"]
-
-    def train(self):
-        print("-----Start training-----")
-        criterion = nn.CrossEntropyLoss()
-        parameters = self.model.parameters()
-        optimizer = optim.Adam(parameters, lr=3e-4)
-        num_epoch = self.train_requirement["num_epoch"]
-        for i in range(num_epoch):
-            running_loss = 0.0
-            for j, (x, y) in enumerate(self.train_data_loader):
-                if self.is_gpu:
-                    x, y = x.cuda(), y.cuda()
-                optimizer.zero_grad()
-                outputs = self.model(x)
-                loss = criterion(outputs, y)
-                loss.backward()
-                optimizer.step()
-                # print statistics
-                running_loss += loss.item()
-                print('%d epoch: %d Done, loss = %f' % (i, j, running_loss))
-                running_loss = 0.0
-            self.save_model()
-        print("-----Finish training-----")
-
-    def test(self):
-        print("-----Start testing-----")
-        if self.is_gpu:
-            self.model = self.model.cpu()  # for testing, we just need cpu
-
-        correct = 0
-        total = 0
-
-        # matrix used for computing f1 score
-        y_true = None
-        y_pred = None
-
-        with torch.no_grad():
-            index = 0
-            for d in self.test_data_loader:
-                inputs, labels = d
-                outputs = self.model(inputs)
-                _, predicted = torch.max(outputs.data, 1)  # predicted shape: [batch_size, 1]
-                total += labels.size(0)  # labels shape: [batch_size, 1]
-                correct += (predicted == labels).sum().item()
-                if index == 0:
-                    y_true = labels
-                    y_pred = predicted
-                else:
-                    y_true = torch.cat((y_true, labels), 0)
-                    y_pred = torch.cat((y_pred, predicted), 0)
-                index += 1
-        print('F1 score: ', f1_score(y_true.numpy(), y_pred.numpy()))
-        print('Precision score: ', precision_score(y_true.numpy(), y_pred.numpy()))
-        print('Recall score: ', recall_score(y_true.numpy(), y_pred.numpy()))
-        print('Accuracy score: ', accuracy_score(y_true.numpy(), y_pred.numpy()))
-        print("-----Finish testing-----")
-
-    def save_model(self):
-        print("-----Start saving trained model-----")
-        torch.save(self.model, self.model_save_path)
-        print("-----Finish saving trained model-----")
-
-    def load_model(self):
-        print("-----Loading trained model-----")
-        model = torch.load(self.model_save_path)
-        print("-----Finish loading-----")
-        return model
-
-    def plot(self):
-        pass
-
-    def load_test(self):
-        self.model = self.load_model()
-        self.test()
 
 
 class CnnAttnModelHelper(nn.Module):
