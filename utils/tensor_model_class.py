@@ -23,14 +23,11 @@ class TensorModel:
     handcraft a deep learning model and wants to train and test this model
     """
 
-    def __init__(self, train_data_set, test_data_set, hyper_parameter):
+    def __init__(self, train_data_set, test_data_set, hyper_parameter, train_requirement):
         self.hyper_parameter = hyper_parameter
         self.train_data_set = train_data_set
         self.test_data_set = test_data_set
-
-    @abstractmethod
-    def build_model(self):
-        pass
+        self.train_requirement = train_requirement
 
     @abstractmethod
     def train(self):
