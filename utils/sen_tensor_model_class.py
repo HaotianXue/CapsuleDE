@@ -36,7 +36,7 @@ class SenTensorModel(TensorModel):
 
     def train(self):
         print("-----Start training-----")
-        weight_class = torch.floatTensor([1, 2])
+        weight_class = torch.FloatTensor([1, 2])
         if self.is_gpu:
             weight_class = weight_class.cuda()
         criterion = nn.CrossEntropyLoss(weight_class)
