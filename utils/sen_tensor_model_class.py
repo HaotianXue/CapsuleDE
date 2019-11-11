@@ -20,11 +20,13 @@ class SenTensorModel(TensorModel):
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
-                 model_save_path=''):
+                 model_save_path='',
+                 lr=3e-4):
         super(SenTensorModel, self).__init__(train_data_set,
                                              test_data_set,
                                              hyper_parameter,
                                              train_requirement)
+        self.lr = lr
         self.is_gpu = is_gpu
         self.model_save_path = model_save_path
         self.model = None
@@ -36,12 +38,13 @@ class SenTensorModel(TensorModel):
 
     def train(self):
         print("-----Start training-----")
+        self.model.train(True)
         weight_class = torch.FloatTensor([1, 2])
         if self.is_gpu:
             weight_class = weight_class.cuda()
         criterion = nn.CrossEntropyLoss(weight_class)
         parameters = self.model.parameters()
-        optimizer = optim.Adam(parameters, lr=3e-4)
+        optimizer = optim.Adam(parameters, lr=self.lr)
         num_epoch = self.train_requirement["num_epoch"]
         for i in range(num_epoch):
             running_loss = 0.0
@@ -63,6 +66,7 @@ class SenTensorModel(TensorModel):
 
     def test(self):
         print("-----Start testing-----")
+        self.model.eval()
         if self.is_gpu:
             self.model = self.model.cpu()  # for testing, we just need cpu
 
@@ -93,6 +97,7 @@ class SenTensorModel(TensorModel):
         print('Recall score: ', recall_score(y_true.numpy(), y_pred.numpy()))
         print('Accuracy score: ', accuracy_score(y_true.numpy(), y_pred.numpy()))
         print("-----Finish testing-----")
+        self.model.train(True)
         if self.is_gpu:
             self.model = self.model.cuda()
 
