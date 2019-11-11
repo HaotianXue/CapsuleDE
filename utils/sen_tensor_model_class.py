@@ -36,7 +36,10 @@ class SenTensorModel(TensorModel):
 
     def train(self):
         print("-----Start training-----")
-        criterion = nn.CrossEntropyLoss()
+        weight_class = torch.floatTensor([1, 2])
+        if self.is_gpu:
+            weight_class = weight_class.cuda()
+        criterion = nn.CrossEntropyLoss(weight_class)
         parameters = self.model.parameters()
         optimizer = optim.Adam(parameters, lr=3e-4)
         num_epoch = self.train_requirement["num_epoch"]
@@ -54,6 +57,7 @@ class SenTensorModel(TensorModel):
                 running_loss += loss.item()
                 print('%d epoch: %d Done, loss = %f' % (i, j, running_loss))
                 running_loss = 0.0
+            self.test()
             self.save_model()
         print("-----Finish training-----")
 
@@ -89,6 +93,8 @@ class SenTensorModel(TensorModel):
         print('Recall score: ', recall_score(y_true.numpy(), y_pred.numpy()))
         print('Accuracy score: ', accuracy_score(y_true.numpy(), y_pred.numpy()))
         print("-----Finish testing-----")
+        if self.is_gpu:
+            self.model = self.model.cuda()
 
     def save_model(self):
         print("-----Start saving trained model-----")
