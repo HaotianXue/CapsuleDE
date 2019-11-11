@@ -104,21 +104,10 @@ class CnnAttnModelHelper(nn.Module):
 
     # method to initialize the model weights (in order to improve performance)
     def weights_init(self, m):
-        if isinstance(m, nn.Linear):
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             nn.init.xavier_uniform_(m.weight)
             if m.bias is not None:
                 nn.init.zeros_(m.bias)
-        if isinstance(m, nn.GRU) or isinstance(m, nn.LSTM) or isinstance(m, nn.RNN):
-            ih = (param.data for name, param in m.named_parameters() if 'weight_ih' in name)
-            hh = (param.data for name, param in m.named_parameters() if 'weight_hh' in name)
-            b = (param.data for name, param in m.named_parameters() if 'bias' in name)
-            # nn.init.uniform(m.embed.weight.data, a=-0.5, b=0.5)
-            for t in ih:
-                nn.init.xavier_uniform(t)
-            for t in hh:
-                nn.init.orthogonal(t)
-            for t in b:
-                nn.init.constant(t, 0)
 
 
 if __name__ == "__main__":

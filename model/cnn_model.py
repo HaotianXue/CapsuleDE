@@ -35,23 +35,25 @@ class CnnModel(SenTensorModel):
         # self.load_test()
 
     def build_model(self):
-        d_w, num_filter, window_size = self.extract_hyper_parameters()
+        d_w, num_filter, window_size, dropout_p = self.extract_hyper_parameters()
         print("-----Start building model-----")
         model = CnnModelHelper(d_w,
                                torch.from_numpy(self.test_data_set.word_embedding),
                                num_filter,
-                               window_size)
+                               window_size,
+                               dropout_p)
         print("-----Finish building model-----")
         return model
 
     def extract_hyper_parameters(self):
         return self.hyper_parameter["d_w"], \
                self.hyper_parameter["num_filter"], \
-               self.hyper_parameter["window_size"]
+               self.hyper_parameter["window_size"], \
+               self.hyper_parameter["dropout_p"]
 
 
 class CnnModelHelper(nn.Module):
-    def __init__(self, d_w, word_emb_weight, num_filter, window_size, num_classes=2):
+    def __init__(self, d_w, word_emb_weight, num_filter, window_size, dropout_p, num_classes=2):
         super(CnnModelHelper, self).__init__()
         self.w2v = nn.Embedding.from_pretrained(word_emb_weight, freeze=False)
         self.cnn_layer = nn.Sequential(
@@ -62,7 +64,7 @@ class CnnModelHelper(nn.Module):
                       padding=(1, 0)),  # out_shape: (batch_size, num_filter, max_sen_len, 1)
             nn.MaxPool2d(kernel_size=(150, 1),
                          stride=(1, 1)),  # out_shape: (batch_size, num_filter, 1, 1)
-            nn.ReLU()
+            nn.Dropout(dropout_p)
         )  # out_shape: (batch_size, num_filter, 1, 1)
         self.cnn_layer.apply(self.weights_init)
         self.linear_layer = nn.Sequential(
@@ -84,27 +86,16 @@ class CnnModelHelper(nn.Module):
 
     # method to initialize the model weights (in order to improve performance)
     def weights_init(self, m):
-        if isinstance(m, nn.Linear):
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             nn.init.xavier_uniform_(m.weight)
             if m.bias is not None:
                 nn.init.zeros_(m.bias)
-        if isinstance(m, nn.GRU) or isinstance(m, nn.LSTM) or isinstance(m, nn.RNN):
-            ih = (param.data for name, param in m.named_parameters() if 'weight_ih' in name)
-            hh = (param.data for name, param in m.named_parameters() if 'weight_hh' in name)
-            b = (param.data for name, param in m.named_parameters() if 'bias' in name)
-            # nn.init.uniform(m.embed.weight.data, a=-0.5, b=0.5)
-            for t in ih:
-                nn.init.xavier_uniform(t)
-            for t in hh:
-                nn.init.orthogonal(t)
-            for t in b:
-                nn.init.constant(t, 0)
 
 
 if __name__ == "__main__":
     from data_fetcher.dataFetcher import SenSemEvalDataSet
     train_requirement = {"num_epoch": 30, "batch_size": 4}
-    hyper_parameter = {"d_w": 50, "num_filter": 256, "window_size": 3}
+    hyper_parameter = {"d_w": 50, "num_filter": 256, "window_size": 3, "dropout_p": 0.4}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
     test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150)
     model = CnnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
