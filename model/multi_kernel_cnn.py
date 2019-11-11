@@ -88,7 +88,6 @@ class MultiKernelCnnModelHelper(nn.Module):
         for cnn_layer in self.cnn_layers:
             out = cnn_layer(x)  # (batch_size, num_filter, 1, 1)
             out = out.view(out.shape[0], -1)  # (batch_size, num_filter)
-            print(out.shape)
             out_list.append(out)
         out = torch.cat(out_list, dim=1)  # (batch_size, num_filter * len(out_list))
         m = nn.Tanh()
