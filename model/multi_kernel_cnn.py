@@ -19,7 +19,7 @@ class MultiKernelCnnModel(SenTensorModel):
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
-                 model_save_path="../trained_model/cnn_model.pt"):
+                 model_save_path="../trained_model/multi_kernel_cnn_model.pt"):
         super(MultiKernelCnnModel, self).__init__(train_data_set,
                                                   test_data_set,
                                                   hyper_parameter,
@@ -88,8 +88,10 @@ class MultiKernelCnnModelHelper(nn.Module):
         for cnn_layer in self.cnn_layers:
             out = cnn_layer(x)  # (batch_size, num_filter, 1, 1)
             out = out.view(out.shape[0], -1)  # (batch_size, num_filter)
+            print(out.shape)
             out_list.append(out)
         out = torch.cat(out_list, dim=1)  # (batch_size, num_filter * len(out_list))
+        print("out shape: ", out.shape)
         m = nn.Tanh()
         out = m(out)
         out = self.linear_layer(out)  # (batch_size, 2)
@@ -105,8 +107,8 @@ class MultiKernelCnnModelHelper(nn.Module):
 
 if __name__ == "__main__":
     from data_fetcher.dataFetcher import SenSemEvalDataSet
-    train_requirement = {"num_epoch": 30, "batch_size": 4}
+    train_requirement = {"num_epoch": 1, "batch_size": 32}
     hyper_parameter = {"d_w": 50, "num_filter": 256, "window_size": [2, 3, 4], "dropout_p": 0.4}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 842)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150)
     model = MultiKernelCnnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
