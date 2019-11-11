@@ -91,7 +91,6 @@ class MultiKernelCnnModelHelper(nn.Module):
             print(out.shape)
             out_list.append(out)
         out = torch.cat(out_list, dim=1)  # (batch_size, num_filter * len(out_list))
-        print("out shape: ", out.shape)
         m = nn.Tanh()
         out = m(out)
         out = self.linear_layer(out)  # (batch_size, 2)
