@@ -16,7 +16,8 @@ class DataFetcher:
         self.OOV = 'OOV'  # 'out of vocabulary'
         self.BLANK = 'BLANK'
         self.padding = padding
-        self.word2id, self.word_embedding = self._load_w2v(w2v_path)
+        if w2v_path is not None:
+            self.word2id, self.word_embedding = self._load_w2v(w2v_path)
 
     def _load_w2v(self, w2v_path):
         """
