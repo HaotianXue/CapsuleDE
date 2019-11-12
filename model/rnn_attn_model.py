@@ -110,6 +110,6 @@ if __name__ == "__main__":
     train_requirement = {"num_epoch": 10, "batch_size": 32}
     hyper_parameter = {"d_w": 50, "hidden_dim": 256, "num_layers": 2, "dropout_prob": 0.1}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, is_gpu=False)
     model = RnnAttnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
 
