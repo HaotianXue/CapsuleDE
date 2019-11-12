@@ -141,8 +141,8 @@ class SenTensorModel(TensorModel):
         if self.train_data_set is None:
             print("get None training set")
             return
-        train_size = int(portion * self.train_data_set.num_data)
-        val_size = self.train_data_set.num_data - train_size
+        val_size = int(portion * self.train_data_set.num_data)
+        train_size = self.train_data_set.num_data - val_size
         self.train_data_set, self.val_data_set = \
             random_split(self.train_data_set, [train_size, val_size])
 
