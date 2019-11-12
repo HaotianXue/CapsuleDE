@@ -9,7 +9,9 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
+from torch.utils.data import random_split
 
 
 class SenTensorModel(TensorModel):
@@ -20,17 +22,20 @@ class SenTensorModel(TensorModel):
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
-                 model_save_path='',
-                 lr=3e-4):
+                 model_save_path=''):
         super(SenTensorModel, self).__init__(train_data_set,
                                              test_data_set,
                                              hyper_parameter,
                                              train_requirement)
-        self.lr = lr
+        self.lr = self.train_requirement["lr"]
+        self.batch_size = self.train_requirement["batch_size"]
+        self.getValidationSet()  # validation data set split
+        self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
+        self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
+        self.val_data_loader = DataLoader(self.val_data_set, self.batch_size, shuffle=False)
         self.is_gpu = is_gpu
         self.model_save_path = model_save_path
         self.model = None
-        self.train_data_loader, self.test_data_loader = None, None
 
     @abstractmethod
     def build_model(self):
@@ -60,13 +65,18 @@ class SenTensorModel(TensorModel):
                 running_loss += loss.item()
                 print('%d epoch: %d Done, loss = %f' % (i, j, running_loss))
                 running_loss = 0.0
-            self.test()
+            self.test(isVal=True)
             self.save_model()
         print("-----Finish training-----")
 
-    def test(self):
+    def test(self, isVal=False):
         print("-----Start testing-----")
         self.model.eval()
+
+        if isVal:
+            data_loader = self.val_data_loader
+        else:
+            data_loader = self.test_data_loader
 
         correct = 0
         total = 0
@@ -77,7 +87,7 @@ class SenTensorModel(TensorModel):
 
         with torch.no_grad():
             index = 0
-            for d in self.test_data_loader:
+            for d in data_loader:
                 inputs, labels = d
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)  # predicted shape: [batch_size, 1]
@@ -125,3 +135,14 @@ class SenTensorModel(TensorModel):
 
     def plot(self):
         pass
+
+    def getValidationSet(self, portion=0.2):
+        if self.train_data_set is None:
+            print("get None training set")
+            return
+        train_size = int(portion * self.train_data_set.num_data)
+        val_size = self.train_data_set.num_data - train_size
+        self.train_data_set, self.val_data_set = \
+            random_split(self.train_data_set, [train_size, val_size])
+
+
