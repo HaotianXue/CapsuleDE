@@ -54,6 +54,7 @@ class SenTensorModel(TensorModel):
         for i in range(num_epoch):
             running_loss = 0.0
             for j, (x, y) in enumerate(self.train_data_loader):
+                # windows needed: y = torch.squeeze(y)
                 if self.is_gpu:
                     x, y = x.cuda(), y.cuda()
                 optimizer.zero_grad()
@@ -101,10 +102,10 @@ class SenTensorModel(TensorModel):
                     y_pred = torch.cat((y_pred, predicted), 0)
                 index += 1
         if self.is_gpu:
-            print('F1 score: ', f1_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
-            print('Precision score: ', precision_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
-            print('Recall score: ', recall_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
-            print('Accuracy score: ', accuracy_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
+            print('F1 score: ', f1_score(y_true.cpu().numpy(), y_pred.cpu().numpy()))
+            print('Precision score: ', precision_score(y_true.cpu().numpy(), y_pred.cpu().numpy()))
+            print('Recall score: ', recall_score(y_true.cpu().numpy(), y_pred.cpu().numpy()))
+            print('Accuracy score: ', accuracy_score(y_true.cpu().numpy(), y_pred.cpu().numpy()))
         else:
             print('F1 score: ', f1_score(y_true.numpy(), y_pred.numpy()))
             print('Precision score: ', precision_score(y_true.numpy(), y_pred.numpy()))
