@@ -8,7 +8,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sen_tensor_model_class import SenTensorModel
-from data_fetcher.dataFetcher import CharSemEvalDataSet
 
 
 class CharCnnModel(SenTensorModel):
@@ -19,13 +18,15 @@ class CharCnnModel(SenTensorModel):
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
-                 model_save_path="../trained_model/char_cnn_model.pt"):
+                 model_save_path="../trained_model/char_cnn_model.pt",
+                 lr=5e-4):
         super(CharCnnModel, self).__init__(train_data_set,
                                            test_data_set,
                                            hyper_parameter,
                                            train_requirement,
                                            is_gpu,
-                                           model_save_path)
+                                           model_save_path,
+                                           lr)
         self.batch_size = self.train_requirement["batch_size"]
         self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
         self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
@@ -103,7 +104,7 @@ class CharCnnModelHelper(nn.Module):
 
 
 if __name__ == "__main__":
-    from data_fetcher.dataFetcher import SenSemEvalDataSet
+    from data_fetcher.dataFetcher import CharSemEvalDataSet
     train_requirement = {"num_epoch": 1, "batch_size": 32}
     hyper_parameter = {"d_w": 32, "num_filter": 64, "window_size": [1, 2, 3, 4, 5, 6, 7, 8], "dropout_p": 0.4}
     train_data_set = CharSemEvalDataSet("../data/train.txt", None, 50, True)
