@@ -58,6 +58,37 @@ class CharCnnModelHelper(nn.Module):
     def __init__(self, d_w, num_filter, window_sizes, dropout_p, num_classes=2):
         super(CharCnnModelHelper, self).__init__()
         self.w2v = nn.Embedding(97, d_w)  # char embedding
+        self.cnn_layer = CNNLayers(d_w, num_filter, window_sizes, dropout_p)
+        self.linear_layer = nn.Sequential(
+            nn.Linear(num_filter * len(window_sizes), num_filter),
+            nn.ReLU(),
+            nn.Linear(num_filter, num_filter // 2),
+            nn.ReLU(),
+            nn.Linear(num_filter // 2, num_classes)
+        )  # out_shape: (batch_size, num_classes)
+        self.linear_layer.apply(self.weights_init)
+
+    def forward(self, x):
+        x = self.w2v(x)  # (batch_size, max_sen_len, d_w)
+        x = torch.unsqueeze(x, dim=1)  # (batch_size, 1, max_sen_len, d_w)
+        out = self.cnn_layer(x)
+        m = nn.Tanh()
+        out = m(out)
+        out = self.linear_layer(out)  # (batch_size, 2)
+        return out
+
+    # method to initialize the model weights (in order to improve performance)
+    def weights_init(self, m):
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+            nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                nn.init.zeros_(m.bias)
+
+
+class CNNLayers(nn.Module):
+
+    def __init__(self, d_w, num_filter, window_sizes, dropout_p):
+        super(CNNLayers, self).__init__()
         self.cnn_layers = []
         for window_size in window_sizes:
             cnn_layer = nn.Sequential(
@@ -72,27 +103,14 @@ class CharCnnModelHelper(nn.Module):
             )
             cnn_layer.apply(self.weights_init)
             self.cnn_layers.append(cnn_layer)
-        self.linear_layer = nn.Sequential(
-            nn.Linear(num_filter * len(window_sizes), num_filter),
-            nn.ReLU(),
-            nn.Linear(num_filter, num_filter // 2),
-            nn.ReLU(),
-            nn.Linear(num_filter // 2, num_classes)
-        )  # out_shape: (batch_size, num_classes)
-        self.linear_layer.apply(self.weights_init)
 
     def forward(self, x):
-        x = self.w2v(x)  # (batch_size, max_sen_len, d_w)
-        x = torch.unsqueeze(x, dim=1)  # (batch_size, 1, max_sen_len, d_w)
         out_list = []
         for cnn_layer in self.cnn_layers:
             out = cnn_layer(x)  # (batch_size, num_filter, 1, 1)
             out = out.view(out.shape[0], -1)  # (batch_size, num_filter)
             out_list.append(out)
         out = torch.cat(out_list, dim=1)  # (batch_size, num_filter * len(out_list))
-        m = nn.Tanh()
-        out = m(out)
-        out = self.linear_layer(out)  # (batch_size, 2)
         return out
 
     # method to initialize the model weights (in order to improve performance)
@@ -108,5 +126,5 @@ if __name__ == "__main__":
     train_requirement = {"num_epoch": 1, "batch_size": 32}
     hyper_parameter = {"d_w": 32, "num_filter": 64, "window_size": [1, 2, 3, 4, 5, 6, 7, 8], "dropout_p": 0.4}
     train_data_set = CharSemEvalDataSet("../data/train.txt", None, 50, True)
-    test_data_set = CharSemEvalDataSet("../data/test.txt", None, 50, True, 842)
+    test_data_set = CharSemEvalDataSet("../data/test.txt", None, 50, True, 842, is_gpu=False)
     model = CharCnnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
