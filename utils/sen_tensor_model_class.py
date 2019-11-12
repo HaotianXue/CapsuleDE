@@ -29,10 +29,7 @@ class SenTensorModel(TensorModel):
                                              train_requirement)
         self.lr = self.train_requirement["lr"]
         self.batch_size = self.train_requirement["batch_size"]
-        self.getValidationSet()  # validation data set split
-        self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
         self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
-        self.val_data_loader = DataLoader(self.val_data_set, self.batch_size, shuffle=False)
         self.is_gpu = is_gpu
         self.model_save_path = model_save_path
         self.model = None
@@ -53,7 +50,9 @@ class SenTensorModel(TensorModel):
         num_epoch = self.train_requirement["num_epoch"]
         for i in range(num_epoch):
             running_loss = 0.0
-            for j, (x, y) in enumerate(self.train_data_loader):
+            self.train_val_split()
+            data_loader = DataLoader(self.split_train_data_set, self.batch_size, shuffle=True)
+            for j, (x, y) in enumerate(data_loader):
                 # windows needed: y = torch.squeeze(y)
                 if self.is_gpu:
                     x, y = x.cuda(), y.cuda()
@@ -75,7 +74,7 @@ class SenTensorModel(TensorModel):
         self.model.eval()
 
         if isVal:
-            data_loader = self.val_data_loader
+            data_loader = DataLoader(self.split_val_data_set, self.batch_size, shuffle=False)
         else:
             data_loader = self.test_data_loader
 
@@ -137,13 +136,13 @@ class SenTensorModel(TensorModel):
     def plot(self):
         pass
 
-    def getValidationSet(self, portion=0.2):
+    def train_val_split(self, portion=0.2):
         if self.train_data_set is None:
             print("get None training set")
             return
         val_size = int(portion * self.train_data_set.num_data)
         train_size = self.train_data_set.num_data - val_size
-        self.train_data_set, self.val_data_set = \
+        self.split_train_data_set, self.split_val_data_set = \
             random_split(self.train_data_set, [train_size, val_size])
 
 
