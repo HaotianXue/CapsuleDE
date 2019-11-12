@@ -25,11 +25,7 @@ class CharCnnModel(SenTensorModel):
                                            hyper_parameter,
                                            train_requirement,
                                            is_gpu,
-                                           model_save_path,
-                                           lr)
-        self.batch_size = self.train_requirement["batch_size"]
-        self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
-        self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
+                                           model_save_path)
         self.model = self.build_model()
         if is_gpu:
             self.model = self.model.cuda()
@@ -127,7 +123,7 @@ class CNNLayers(nn.Module):
 
 if __name__ == "__main__":
     from data_fetcher.dataFetcher import CharSemEvalDataSet
-    train_requirement = {"num_epoch": 1, "batch_size": 32}
+    train_requirement = {"num_epoch": 1, "batch_size": 32, "lr": 1e-4}
     hyper_parameter = {"d_w": 32, "num_filter": 64, "window_size": [1, 2, 3, 4, 5, 6, 7, 8], "dropout_p": 0.4}
     train_data_set = CharSemEvalDataSet("../data/train.txt", None, 50, True)
     test_data_set = CharSemEvalDataSet("../data/test.txt", None, 50, True, 842)

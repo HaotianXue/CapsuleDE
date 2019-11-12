@@ -7,7 +7,6 @@ Author: Haotian Xue
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
 from sen_tensor_model_class import SenTensorModel
 
 
@@ -19,18 +18,13 @@ class MultiKernelCnnModel(SenTensorModel):
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
-                 model_save_path="../trained_model/multi_kernel_cnn_model.pt",
-                 lr=5e-4):
+                 model_save_path="../trained_model/multi_kernel_cnn_model.pt"):
         super(MultiKernelCnnModel, self).__init__(train_data_set,
                                                   test_data_set,
                                                   hyper_parameter,
                                                   train_requirement,
                                                   is_gpu,
-                                                  model_save_path,
-                                                  lr)
-        self.batch_size = self.train_requirement["batch_size"]
-        self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
-        self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
+                                                  model_save_path)
         self.model = self.build_model()
         if is_gpu:
             self.model = self.model.cuda()
@@ -130,7 +124,7 @@ class CNNLayers(nn.Module):
 
 if __name__ == "__main__":
     from data_fetcher.dataFetcher import SenSemEvalDataSet
-    train_requirement = {"num_epoch": 1, "batch_size": 32}
+    train_requirement = {"num_epoch": 1, "batch_size": 32, "lr": 5e-4}
     hyper_parameter = {"d_w": 50, "num_filter": 100, "window_size": [2, 3, 4], "dropout_p": 0.4}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
     test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150)

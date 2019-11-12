@@ -28,9 +28,6 @@ class CnnAttnModel(SenTensorModel):
                                            train_requirement,
                                            is_gpu,
                                            model_save_path)
-        self.batch_size = self.train_requirement["batch_size"]
-        self.train_data_loader = DataLoader(self.train_data_set, self.batch_size, shuffle=True)
-        self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
         self.model = self.build_model()
         if is_gpu:
             self.model = self.model.cuda()
@@ -112,7 +109,7 @@ class CnnAttnModelHelper(nn.Module):
 
 if __name__ == "__main__":
     from data_fetcher.dataFetcher import SenSemEvalDataSet
-    train_requirement = {"num_epoch": 30, "batch_size": 8}
+    train_requirement = {"num_epoch": 30, "batch_size": 8, "lr": 3e-4}
     # num_heads, hidden_dim, num_layers, dropout
     hyper_parameter = {"d_w": 50, "num_filter": 256, "window_size": 3, "num_heads": 4, "hidden_dim": 128, "num_layers": 2, "dropout": 0.2}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
