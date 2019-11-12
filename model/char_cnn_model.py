@@ -42,7 +42,8 @@ class CharCnnModel(SenTensorModel):
         model = CharCnnModelHelper(d_w,
                                    num_filter,
                                    window_sizes,
-                                   dropout_p)
+                                   dropout_p,
+                                   self.is_gpu)
         print("-----Finish building model-----")
         return model
 
@@ -55,10 +56,10 @@ class CharCnnModel(SenTensorModel):
 
 class CharCnnModelHelper(nn.Module):
 
-    def __init__(self, d_w, num_filter, window_sizes, dropout_p, num_classes=2):
+    def __init__(self, d_w, num_filter, window_sizes, dropout_p, is_gpu, num_classes=2):
         super(CharCnnModelHelper, self).__init__()
         self.w2v = nn.Embedding(97, d_w)  # char embedding
-        self.cnn_layer = CNNLayers(d_w, num_filter, window_sizes, dropout_p)
+        self.cnn_layer = CNNLayers(d_w, num_filter, window_sizes, dropout_p, is_gpu)
         self.linear_layer = nn.Sequential(
             nn.Linear(num_filter * len(window_sizes), num_filter),
             nn.ReLU(),
@@ -87,8 +88,9 @@ class CharCnnModelHelper(nn.Module):
 
 class CNNLayers(nn.Module):
 
-    def __init__(self, d_w, num_filter, window_sizes, dropout_p):
+    def __init__(self, d_w, num_filter, window_sizes, dropout_p, is_gpu):
         super(CNNLayers, self).__init__()
+        self.is_gpu = is_gpu
         self.cnn_layers = []
         for window_size in window_sizes:
             cnn_layer = nn.Sequential(
@@ -107,6 +109,8 @@ class CNNLayers(nn.Module):
     def forward(self, x):
         out_list = []
         for cnn_layer in self.cnn_layers:
+            if self.is_gpu:
+                cnn_layer = cnn_layer.cuda()
             out = cnn_layer(x)  # (batch_size, num_filter, 1, 1)
             out = out.view(out.shape[0], -1)  # (batch_size, num_filter)
             out_list.append(out)
@@ -126,5 +130,5 @@ if __name__ == "__main__":
     train_requirement = {"num_epoch": 1, "batch_size": 32}
     hyper_parameter = {"d_w": 32, "num_filter": 64, "window_size": [1, 2, 3, 4, 5, 6, 7, 8], "dropout_p": 0.4}
     train_data_set = CharSemEvalDataSet("../data/train.txt", None, 50, True)
-    test_data_set = CharSemEvalDataSet("../data/test.txt", None, 50, True, 842, is_gpu=False)
+    test_data_set = CharSemEvalDataSet("../data/test.txt", None, 50, True, 842)
     model = CharCnnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)

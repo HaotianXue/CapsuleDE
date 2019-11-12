@@ -133,5 +133,5 @@ if __name__ == "__main__":
     train_requirement = {"num_epoch": 1, "batch_size": 32}
     hyper_parameter = {"d_w": 50, "num_filter": 100, "window_size": [2, 3, 4], "dropout_p": 0.4}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150, is_gpu=False)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150)
     model = MultiKernelCnnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)

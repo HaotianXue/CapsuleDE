@@ -116,6 +116,6 @@ if __name__ == "__main__":
     # num_heads, hidden_dim, num_layers, dropout
     hyper_parameter = {"d_w": 50, "num_filter": 256, "window_size": 3, "num_heads": 4, "hidden_dim": 128, "num_layers": 2, "dropout": 0.2}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150, is_gpu=False)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150)
     model = CnnAttnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
 

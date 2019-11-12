@@ -97,6 +97,6 @@ if __name__ == "__main__":
     train_requirement = {"num_epoch": 30, "batch_size": 4}
     hyper_parameter = {"d_w": 50, "num_filter": 256, "window_size": 3, "dropout_p": 0.4}
     train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150, is_gpu=False)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, 150)
     model = CnnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
 
