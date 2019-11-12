@@ -67,8 +67,6 @@ class SenTensorModel(TensorModel):
     def test(self):
         print("-----Start testing-----")
         self.model.eval()
-        if self.is_gpu:
-            self.model = self.model.cpu()  # for testing, we just need cpu
 
         correct = 0
         total = 0
@@ -92,14 +90,18 @@ class SenTensorModel(TensorModel):
                     y_true = torch.cat((y_true, labels), 0)
                     y_pred = torch.cat((y_pred, predicted), 0)
                 index += 1
-        print('F1 score: ', f1_score(y_true.numpy(), y_pred.numpy()))
-        print('Precision score: ', precision_score(y_true.numpy(), y_pred.numpy()))
-        print('Recall score: ', recall_score(y_true.numpy(), y_pred.numpy()))
-        print('Accuracy score: ', accuracy_score(y_true.numpy(), y_pred.numpy()))
+        if self.is_gpu:
+            print('F1 score: ', f1_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
+            print('Precision score: ', precision_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
+            print('Recall score: ', recall_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
+            print('Accuracy score: ', accuracy_score(y_true.cpu.numpy(), y_pred.cpu.numpy()))
+        else:
+            print('F1 score: ', f1_score(y_true.numpy(), y_pred.numpy()))
+            print('Precision score: ', precision_score(y_true.numpy(), y_pred.numpy()))
+            print('Recall score: ', recall_score(y_true.numpy(), y_pred.numpy()))
+            print('Accuracy score: ', accuracy_score(y_true.numpy(), y_pred.numpy()))
         print("-----Finish testing-----")
         self.model.train(True)
-        if self.is_gpu:
-            self.model = self.model.cuda()
 
     def save_model(self):
         print("-----Start saving trained model-----")
