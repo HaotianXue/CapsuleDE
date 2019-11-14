@@ -57,20 +57,28 @@ class CnnPosModelHelper(nn.Module):
         super(CnnPosModelHelper, self).__init__()
         self.pos_embedding = nn.Embedding(150, d_b)
         self.w2v = nn.Embedding.from_pretrained(word_emb_weight, freeze=False)
-        self.cnn_layer = nn.Sequential(
+        self.cnn_layer1 = nn.Sequential(
             nn.Conv2d(in_channels=1,
                       out_channels=num_filter,
                       kernel_size=(window_size, d_w + d_b),
                       stride=(1, 1),
                       padding=(1, 0)),  # out_shape: (batch_size, num_filter, max_sen_len, 1)
-            nn.MaxPool2d(kernel_size=(150, 1),
-                         stride=(1, 1)),  # out_shape: (batch_size, num_filter, 1, 1)
+            nn.MaxPool2d(kernel_size=(window_size, 1),
+                         stride=(1, 1)),  # out_shape: (batch_size, num_filter, max_sen_len - window_size + 1, 1)
             nn.Dropout(dropout_p)
         )  # out_shape: (batch_size, num_filter, 1, 1)
-        self.cnn_layer.apply(self.weights_init)
+        self.cnn_layer1.apply(self.weights_init)
+        self.cnn_layer2 = nn.Sequential(
+            nn.Conv2d(in_channels=1,
+                      out_channels=num_filter // 2,
+                      kernel_size=(window_size, num_filter),
+                      stride=(1, 1),
+                      padding=(1, 0)),  # out_shape: (batch_size, num_filter/2, max_sen_len - window_size + 1, 1)
+            nn.MaxPool2d(kernel_size=(150 - window_size + 1, 1),
+                         stride=(1, 1)),  # out_shape: (batch_size, num_filter // 2, 1, 1)
+            nn.Dropout(dropout_p)
+        )
         self.linear_layer = nn.Sequential(
-            nn.Linear(num_filter, num_filter // 2),
-            nn.ReLU(),
             nn.Linear(num_filter // 2, num_classes)
         )  # out_shape: (batch_size, num_classes)
         self.linear_layer.apply(self.weights_init)
@@ -82,10 +90,10 @@ class CnnPosModelHelper(nn.Module):
         x = self.w2v(x)  # (batch_size, max_sen_len, d_w)
         x = torch.cat([x, pos_x], dim=2)  # (batch_size, max_sen_len, d_w + d_b)
         x = torch.unsqueeze(x, dim=1)  # (batch_size, 1, max_sen_len, d_w + d_b)
-        out = self.cnn_layer(x)  # (batch_size, num_filter, 1, 1)
-        out = out.view(out.shape[0], -1)  # (batch_size, num_filter)
-        m = nn.Tanh()
-        out = m(out)
+        out = self.cnn_layer1(x)  # (batch_size, num_filter, max_sen_len - window_size + 1, 1)
+        out = out.transpose(1, 3)  # (batch_size, 1, max_sen_len - window_size + 1, num_filter)
+        out = self.cnn_layer2(out)  # (batch_size, num_filter / 2, 1, 1)
+        out = out.view(out.shape[0], -1)  # (batch_size, num_filter/2)
         out = self.linear_layer(out)  # (batch_size, 2)
         return out
 
