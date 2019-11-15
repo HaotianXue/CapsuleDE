@@ -63,7 +63,7 @@ class RnnAttnModelHelper(nn.Module):
                                  batch_first=True,
                                  dropout=dropout_p,
                                  bidirectional=True)  # shape: (batch_size, sen_len, hidden_size*2)
-        self.rnn_layer.apply(self.weights_init)
+        self.rnn_layer1.apply(self.weights_init)
         self.word_attn1 = attention.WordAttention(hidden_dim * 2)  # shape: (batch_size, hidden_dim*2)
         for p in self.word_attn1.parameters():
             if p.dim() > 1:  # dim: 维度数
