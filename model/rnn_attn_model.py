@@ -87,7 +87,7 @@ class RnnAttnModelHelper(nn.Module):
         )  # (batch, hidden_size * 4)
         self.linear_layer1.apply(self.weights_init)
         self.linear_layer2 = nn.Sequential(
-            hidden_dim * 4, num_classes
+            nn.Linear(hidden_dim * 4, num_classes)
         )  # (batch, 2)
 
     def forward(self, x):
@@ -125,8 +125,8 @@ if __name__ == "__main__":
     from data_fetcher.dataFetcher import SenSemEvalDataSet
     print(torch.cuda.is_available())
     train_requirement = {"num_epoch": 30, "batch_size": 32, "lr": 3e-4}
-    hyper_parameter = {"d_w": 300, "hidden_dim": 64, "num_layers": 2, "dropout_prob": 0.5}
-    train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.840B.300d.txt", 300, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.840B.300d.txt", 300, True, is_gpu=False)
+    hyper_parameter = {"d_w": 50, "hidden_dim": 64, "num_layers": 2, "dropout_prob": 0.5}
+    train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, is_gpu=False)
     model = RnnAttnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
 
