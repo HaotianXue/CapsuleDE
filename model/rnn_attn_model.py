@@ -54,32 +54,52 @@ class RnnAttnModelHelper(nn.Module):
     def __init__(self, d_w, word_emb_weight, hidden_dim, num_layers, num_classes=2, dropout_p=0.2):
         super(RnnAttnModelHelper, self).__init__()
         self.hidden_dim = hidden_dim
-        self.w2v = nn.Embedding.from_pretrained(word_emb_weight, freeze=False)
-        self.rnn_layer = nn.LSTM(input_size=d_w,
+        self.w2v = nn.Embedding.from_pretrained(word_emb_weight, freeze=True)
+        self.dropout = nn.Dropout(dropout_p)
+        self.rnn_layer1 = nn.GRU(input_size=d_w,
                                  hidden_size=hidden_dim,
-                                 num_layers=num_layers,
+                                 num_layers=1,
                                  bias=True,
                                  batch_first=True,
                                  dropout=dropout_p,
                                  bidirectional=True)  # shape: (batch_size, sen_len, hidden_size*2)
         self.rnn_layer.apply(self.weights_init)
-        self.word_attn = attention.WordAttention(hidden_dim * 2)  # shape: (batch_size, hidden_dim*2)
-        self.linear_layer = nn.Sequential(  # int_shape: (batch_size, hidden_size*2)
-            nn.Linear(hidden_dim * 2, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim // 4),
-            nn.ReLU(),
-            nn.Linear(hidden_dim // 4, num_classes)  # out_shape: (batch_size, num_classes)
-        )
-        self.linear_layer.apply(self.weights_init)
+        self.word_attn1 = attention.WordAttention(hidden_dim * 2)  # shape: (batch_size, hidden_dim*2)
+        for p in self.word_attn1.parameters():
+            if p.dim() > 1:  # dim: 维度数
+                nn.init.xavier_uniform_(p)
+        self.rnn_layer2 = nn.GRU(input_size=hidden_dim * 2,
+                                 hidden_size=hidden_dim,
+                                 num_layers=1,
+                                 bias=True,
+                                 batch_first=True,
+                                 dropout=dropout_p,
+                                 bidirectional=True)  # shape: (batch_size, sen_len, hidden_size*2)
+        self.rnn_layer2.apply(self.weights_init)
+        self.word_attn2 = attention.WordAttention(hidden_dim * 2)  # (batch_size, hidden_dim*2)
+        for p in self.word_attn2.parameters():
+            if p.dim() > 1:  # dim: 维度数
+                nn.init.xavier_uniform_(p)
+        self.linear_layer1 = nn.Sequential(  # int_shape: (batch_size, hidden_size*4)
+            nn.Linear(hidden_dim * 4, hidden_dim * 4),
+            nn.BatchNorm1d(hidden_dim * 4),
+            nn.ReLU()
+        )  # (batch, hidden_size * 4)
+        self.linear_layer1.apply(self.weights_init)
+        self.linear_layer2 = nn.Sequential(
+            hidden_dim * 4, num_classes
+        )  # (batch, 2)
 
     def forward(self, x):
         x = self.w2v(x)
-        out, _ = self.rnn_layer(x)
-        m = nn.Tanh()
-        out = m(out)
-        out = self.word_attn(out)
-        out = self.linear_layer(out)
+        x = self.dropout(x)
+        out1, _ = self.rnn_layer1(x)  # (batch, sen, hidden_dim*2)
+        attn1 = self.word_attn1(out1)  # (batch, hidden_dim*2)
+        out2, _ = self.rnn_layer2(out1)  # (batch, sen, hidden_dim*2)
+        attn2 = self.word_attn2(out2)  # (batch, hidden_dim*2)
+        out = torch.cat([attn1, attn2], dim=1)  # (batch, hidden_dim*4)
+        out = self.linear_layer1(self.dropout(out))
+        out = self.linear_layer2(self.dropout(out))
         return out
 
     # method to initialize the model weights (in order to improve performance)
@@ -104,9 +124,9 @@ class RnnAttnModelHelper(nn.Module):
 if __name__ == "__main__":
     from data_fetcher.dataFetcher import SenSemEvalDataSet
     print(torch.cuda.is_available())
-    train_requirement = {"num_epoch": 10, "batch_size": 32, "lr": 3e-4}
-    hyper_parameter = {"d_w": 50, "hidden_dim": 256, "num_layers": 2, "dropout_prob": 0.1}
-    train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, is_gpu=False)
+    train_requirement = {"num_epoch": 30, "batch_size": 32, "lr": 3e-4}
+    hyper_parameter = {"d_w": 300, "hidden_dim": 64, "num_layers": 2, "dropout_prob": 0.5}
+    train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.840B.300d.txt", 300, True)
+    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.840B.300d.txt", 300, True, is_gpu=False)
     model = RnnAttnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
 
