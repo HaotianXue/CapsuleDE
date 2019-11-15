@@ -33,6 +33,7 @@ class DataFetcher:
         vec.append(np.random.normal(size=self.emb_dim, loc=0, scale=0.05))
         with open(w2v_path, 'r') as f:
             for line in f:
+                line = line.replace(u'\xa0', u'')
                 tokens = line.strip().split()
                 word2id[tokens[0]] = len(word2id)
                 vec.append(np.array([float(x) for x in tokens[1:]]))
