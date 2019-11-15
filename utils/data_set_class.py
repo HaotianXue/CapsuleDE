@@ -33,9 +33,15 @@ class DataFetcher:
         vec.append(np.random.normal(size=self.emb_dim, loc=0, scale=0.05))
         with open(w2v_path, 'r') as f:
             for line in f:
+                o_line = line
                 line = line.replace(u'\xa0', u'')
-                tokens = line.strip().split()
+                tokens = line.split()
+                if tokens[0].isnumeric():
+                    continue
                 word2id[tokens[0]] = len(word2id)
+                if np.array([float(x) for x in tokens[1:]]).shape[0] != self.emb_dim:
+                    del word2id[tokens[0]]
+                    continue
                 vec.append(np.array([float(x) for x in tokens[1:]]))
 
         word_embedding = np.array(vec, dtype=np.float32)
