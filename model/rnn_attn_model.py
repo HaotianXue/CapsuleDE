@@ -8,19 +8,18 @@ import torch
 import torch.nn as nn
 import attention
 from sen_tensor_model_class import SenTensorModel
+from data_fetcher.torchTextDataFetcher import TorchTextSemEvalDataSet
 
 
 class RnnAttnModel(SenTensorModel):
 
     def __init__(self,
-                 train_data_set,
-                 test_data_set,
+                 dataset,
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
                  model_save_path="../trained_model/rnn_attn_model.pt"):
-        super(RnnAttnModel, self).__init__(train_data_set,
-                                           test_data_set,
+        super(RnnAttnModel, self).__init__(dataset,
                                            hyper_parameter,
                                            train_requirement,
                                            is_gpu,
@@ -34,7 +33,7 @@ class RnnAttnModel(SenTensorModel):
         d_w, hidden_dim, num_layers, dropout_prob = self.extract_hyper_parameters()
         print("-----Start building model-----")
         model = RnnAttnModelHelper(d_w,
-                                   torch.from_numpy(self.test_data_set.word_embedding),
+                                   self.dataset.TEXT.vocab.vectors,
                                    hidden_dim,
                                    num_layers=num_layers,
                                    dropout_p=dropout_prob)
@@ -130,11 +129,15 @@ class RnnAttnModelHelper(nn.Module):
 
 
 if __name__ == "__main__":
-    from data_fetcher.dataFetcher import SenSemEvalDataSet
     print(torch.cuda.is_available())
     train_requirement = {"num_epoch": 30, "batch_size": 32, "lr": 3e-4}
     hyper_parameter = {"d_w": 50, "hidden_dim": 40, "num_layers": 2, "dropout_prob": 0.5}
-    train_data_set = SenSemEvalDataSet("../data/train.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
-    test_data_set = SenSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True, is_gpu=False)
-    model = RnnAttnModel(train_data_set, test_data_set, hyper_parameter, train_requirement)
+    data_set = TorchTextSemEvalDataSet("../data/train.csv",
+                                       "../data/test.csv",
+                                       "../data/word_embedding/glove.6B.50d.txt",
+                                       train_requirement["batch_size"],
+                                       True,
+                                       150,
+                                       torch.cuda.is_available())
+    model = RnnAttnModel(data_set, hyper_parameter, train_requirement)
 
