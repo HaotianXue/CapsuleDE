@@ -67,7 +67,7 @@ class RnnAttnModelHelper(nn.Module):
         for p in self.lstm_attn.parameters():
             if p.dim() > 1:  # dim: 维度数
                 nn.init.xavier_uniform_(p)
-        self.gru = nn.GRU(input_size=hidden_dim * 2,
+        self.gru = nn.GRU(input_size=d_w,
                           hidden_size=hidden_dim,
                           num_layers=1,
                           bias=True,
