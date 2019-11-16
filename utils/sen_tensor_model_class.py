@@ -12,24 +12,23 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from torch.utils.data import random_split
+from data_fetcher.torchTextDataFetcher import TorchTextSemEvalDataSet
 
 
 class SenTensorModel(TensorModel):
 
     def __init__(self,
-                 train_data_set,
-                 test_data_set,
+                 dataset,
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
                  model_save_path=''):
-        super(SenTensorModel, self).__init__(train_data_set,
-                                             test_data_set,
+        super(SenTensorModel, self).__init__(dataset,
                                              hyper_parameter,
                                              train_requirement)
         self.lr = self.train_requirement["lr"]
         self.batch_size = self.train_requirement["batch_size"]
-        self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
+        # self.test_data_loader = DataLoader(self.test_data_set, self.batch_size, shuffle=False)
         self.is_gpu = is_gpu
         self.model_save_path = model_save_path
         self.model = None
@@ -50,10 +49,11 @@ class SenTensorModel(TensorModel):
         num_epoch = self.train_requirement["num_epoch"]
         for i in range(num_epoch):
             running_loss = 0.0
-            self.train_val_split()
-            data_loader = DataLoader(self.split_train_data_set, self.batch_size, shuffle=True)
-            for j, (x, y) in enumerate(data_loader):
+            # self.train_val_split()
+            # data_loader = DataLoader(self.split_train_data_set, self.batch_size, shuffle=True)
+            for j, b in enumerate(self.train_data_set):
                 # windows needed: y = torch.squeeze(y)
+                x, y = b.sents, b.label
                 if self.is_gpu:
                     x, y = x.cuda(), y.cuda()
                 optimizer.zero_grad()
@@ -63,9 +63,10 @@ class SenTensorModel(TensorModel):
                 optimizer.step()
                 # print statistics
                 running_loss += loss.item()
-                print('%d epoch: %d Done, loss = %f' % (i, j, running_loss))
-                running_loss = 0.0
-            self.test(isVal=True)
+                if j % 20 == 19:
+                    print('%d epoch: %d Done, loss = %f' % (i, j, running_loss / 20.0))
+                    running_loss = 0.0
+            # self.test(isVal=True)
             self.save_model()
         print("-----Finish training-----")
 
@@ -73,10 +74,12 @@ class SenTensorModel(TensorModel):
         print("-----Start testing-----")
         self.model.eval()
 
+        """
         if isVal:
             data_loader = DataLoader(self.split_val_data_set, self.batch_size, shuffle=False)
         else:
             data_loader = self.test_data_loader
+        """
 
         correct = 0
         total = 0
@@ -87,8 +90,8 @@ class SenTensorModel(TensorModel):
 
         with torch.no_grad():
             index = 0
-            for d in data_loader:
-                inputs, labels = d
+            for d in self.test_data_set:
+                inputs, labels = d.sents, d.label
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)  # predicted shape: [batch_size, 1]
                 total += labels.size(0)  # labels shape: [batch_size, 1]
