@@ -25,7 +25,7 @@ class CapRNNModel(SenTensorModel):
                  hyper_parameter,
                  train_requirement,
                  is_gpu=torch.cuda.is_available(),
-                 model_save_path="../trained_model/rnn_attn_model.pt"):
+                 model_save_path="../trained_model/capsule_rnn_model.pt"):
         super(CapRNNModel, self).__init__(dataset,
                                           hyper_parameter,
                                           train_requirement,
@@ -66,7 +66,7 @@ class CapsuleLayer(nn.Module):
         self.num_capsule = num_capsule
         self.dim_capsule = dim_capsule
         self.routings = routings
-        self.kernel_size = kernel_size  # 暂时没用到
+        self.kernel_size = kernel_size  # not used so far
         self.share_weights = share_weights
         if activation == 'default':
             self.activation = self.squash
@@ -78,7 +78,7 @@ class CapsuleLayer(nn.Module):
                 nn.init.xavier_normal_(torch.empty(1, input_dim_capsule, self.num_capsule * self.dim_capsule)), requires_grad=True)
         else:
             self.W = nn.Parameter(
-                torch.randn(BATCH_SIZE, input_dim_capsule, self.num_capsule * self.dim_capsule), requires_grad=True)  # 64即batch_size
+                torch.randn(BATCH_SIZE, input_dim_capsule, self.num_capsule * self.dim_capsule), requires_grad=True)
 
     def forward(self, x):
         if self.share_weights:
@@ -90,18 +90,19 @@ class CapsuleLayer(nn.Module):
         input_num_capsule = x.size(1)  # input_num_capsule = sen_len
         u_hat_vecs = u_hat_vecs.view((batch_size, input_num_capsule,
                                       self.num_capsule, self.dim_capsule))
-        u_hat_vecs = u_hat_vecs.permute(0, 2, 1, 3)  # 转成(batch_size,num_capsule,input_num_capsule,dim_capsule)
+        u_hat_vecs = u_hat_vecs.permute(0, 2, 1, 3)  # (batch_size,num_capsule,input_num_capsule,dim_capsule)
         b = torch.zeros_like(u_hat_vecs[:, :, :, 0])  # (batch_size,num_capsule,input_num_capsule)
 
         for i in range(self.routings):
             b = b.permute(0, 2, 1)  # (batch, input_num_capsule, num_capsule)
-            c = F.softmax(b, dim=2)
-            c = c.permute(0, 2, 1)
+            c = F.softmax(b, dim=2) # (batch, input_num_capsule, num_capsule)
+            c = c.permute(0, 2, 1)  # (batch, num_capsule, input_num_capsule)
             b = b.permute(0, 2, 1)  # (batch, num_capsule, input_num_capsule)
-            outputs = self.activation(torch.einsum('bij,bijk->bik', (c, u_hat_vecs)))  # batch matrix multiplication
+            outputs = self.activation(torch.einsum('bij,bijk->bik', (c, u_hat_vecs)))
             # outputs shape (batch_size, num_capsule, dim_capsule)
             if i < self.routings - 1:
-                b = torch.einsum('bik,bijk->bij', (outputs, u_hat_vecs))  # batch matrix multiplication
+                # cannot use += as += will cause the problem of inplace operation
+                b = b + torch.einsum('bik,bijk->bij', (outputs, u_hat_vecs))
         return outputs  # (batch_size, num_capsule, dim_capsule)
 
     def squash(self, x, axis=-1):
