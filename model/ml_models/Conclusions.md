@@ -8,4 +8,5 @@
 #### Things to do next:
 #### 1. I will try more rounds for XGB then to see how well it will perform.
 #### 2. What about a voting system with XGB and SVM? That is interesting.
-#### 3. Time to look into BERT I think.
+#### 3. A totally automatic framework for ML models sounds cool.
+#### 4. Time to look into BERT I think.
