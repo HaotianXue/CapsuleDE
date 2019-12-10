@@ -1,5 +1,13 @@
 # Definition_Extraction
 
-SemEval2020 Task6
+SemEval2020 Task6 Subtask 1
+
+Task: Given a sentence, tell if it is definitional.
+
+Best Model(so far): 
+
+ML: XGBoost F1-score: 62.226%
+
+DL: LSTM + Capsule F1-score: 76.977%
 
 Authors: Haotian Xue, Zirong Chen(github: RexZChen)
