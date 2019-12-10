@@ -13,6 +13,8 @@ ML: XGBoost F1-score: 64.689%
 Here is the image of AUC's of both train and test sets while rounds goes up.
 
 ![GitHub Logo](/img/XGBoost.png)
+Following is the tree formed during XGBoosting.
+![GitHub Logo](/img/1400_tfidf_tree.png)
 
 DL: LSTM + Capsule F1-score: 76.977%
 
