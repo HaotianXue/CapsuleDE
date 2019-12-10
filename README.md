@@ -8,7 +8,7 @@ Dataset: SemEval2020 Task6 Dataset
 
 Best Model(so far): 
 
-ML: XGBoost F1-score: 62.226%
+ML: XGBoost F1-score: 64.689%
 
 DL: LSTM + Capsule F1-score: 76.977%
 
