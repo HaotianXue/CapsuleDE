@@ -11,6 +11,9 @@ Dataset: SemEval2020 Task6 Dataset
 Best Model(so far): 
 
 ML: XGBoost F1-score: 64.689%
+Feature Selection:
+1. BoW vs TF-iDF
+![GitHub Logo](/img/BoW_&_TF-iDF.png)
 
 Here is the image of AUC's of both train and test sets while rounds goes up.
 
