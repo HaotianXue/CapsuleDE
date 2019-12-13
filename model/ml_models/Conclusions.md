@@ -7,11 +7,11 @@
 
 #### Things to do next:
 #### 1. I will try more rounds for XGB then to see how well it will perform.
-#### 2. What about a voting system with XGB and SVM? That is interesting.
+#### 2. What about a voting system with XGB and SVM? That is interesting(also time-consuming btw, last soft voting system took 15 hours to train).
 #### 3. A totally automatic framework for ML models sounds cool.
 #### 4. Time to look into BERT I think.
 
-### 12/07/2019
+### 12/11/2019
 #### It seems that not all models will perform better with TF-iDF, so I tried all models with both BoW and TF-iDF except Voting. 
-#### Since TF-iDF can not promise a better overall performance than BoW, maybe other features like stopwords, stemwrods and lemma will also perform differently in some models. I will find out then.
+#### Since TF-iDF can not promise a better overall performance than BoW, maybe other features like stopwords, stemwrods and lemma will also perform diffirently in some models. I will find out then.
 #### Google Colab can not run a notebook for too long, it is quite annoying. XGBoost can do a better job if rounds are increased to 2k or even 3k sicne so many rounds have been consumed, XGBoost seems still improving, which is good news, however I may now have trouble with running this model.
