@@ -120,15 +120,15 @@ class SenTensorModel(TensorModel):
         model = self.load_model()
         model.eval()
         data_set = self.dataset.error_check_data_set
-        data_loader = DataLoader(data_set, batch_size=1, shuffle=False)
+        # data_loader = DataLoader(data_set, batch_size=1, shuffle=False)
         with torch.no_grad():
-            for i, data in enumerate(data_loader):
-                tokens, label = data
+            for i, data in enumerate(self.test_data_set):
+                tokens, label = data.sents, data.label
                 output = model(tokens)
                 _, predicted = torch.max(output.data, 1)  # predicted shape: [batch=1, 1]
                 if predicted != label:
                     origin_tokens = data_set.tokens[i]
-                    print("Got missed classification here!")
+                    print("Got missed classification here: ", i)
                     print("Ground truth: ", label, " predicted: ", predicted)
                     print("origin sentence: ", origin_tokens)
 

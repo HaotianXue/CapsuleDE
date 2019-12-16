@@ -169,7 +169,6 @@ class ErrorCheckSemEvalHelper(DataFetcher):
         data_y = []
         max_len = 0
         data_tokens = []
-        print("data path: ", self.data_path)
         with open(self.data_path, 'r') as file:
             for i, line in enumerate(file):
                 tokens = line.strip().split()[1:]  # remove first ""
@@ -178,7 +177,7 @@ class ErrorCheckSemEvalHelper(DataFetcher):
                 x_tokens = tokens[:-1]
                 if x_tokens[0].isdigit():
                     x_tokens = x_tokens[2:]  # ['5', '.', 'Science', ...] => ['Science', ...]
-                data_tokens.append(x_tokens)
+                data_tokens.append(line)
                 if self.padding and len(x_tokens) > max_len:
                     max_len = len(x_tokens)
                 y_token = int(tokens[-1][1])
@@ -303,7 +302,7 @@ class CharSemEvalHelper(DataFetcher):
 
 
 if __name__ == "__main__":
-    ds = ErrorCheckSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, True)
+    ds = ErrorCheckSemEvalDataSet("../data/test.txt", "../data/word_embedding/glove.6B.50d.txt", 50, padding=True, max_sen_len=150)
     ds_loader = DataLoader(ds, 1, shuffle=False)
     print(ds.num_data)
     for i, d in enumerate(ds_loader):
@@ -311,6 +310,7 @@ if __name__ == "__main__":
         print(x.size())
         print(x)
         print(y)
+        break
     '''
     ds = CharSemEvalDataSet("../data/train.txt", None, 50, True)  # train: 842, test: 656
     train_size = int(0.8 * ds.num_data)

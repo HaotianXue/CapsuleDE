@@ -47,8 +47,9 @@ class TorchTextSemEvalDataSet:
                                               shuffle=True,
                                               sort_within_batch=True)
         self.test_iter = torchtext.data.BucketIterator(dataset=self.test_set,
-                                                       batch_size=batch_size,
+                                                       batch_size=1,
                                                        sort_key=lambda x: len(x.sents),
+                                                       shuffle=False,
                                                        sort_within_batch=True)
         self.emb_dim = self.TEXT.vocab.vectors.shape[1]
         # add error checking data set
