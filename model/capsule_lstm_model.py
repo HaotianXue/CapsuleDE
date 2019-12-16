@@ -34,7 +34,8 @@ class CapRNNModel(SenTensorModel):
         self.model = self.build_model()
         if is_gpu:
             self.model = self.model.cuda()
-        self.train_test()
+        # self.train_test()
+        self.error_checking()
 
     def build_model(self):
         d_w, hidden_dim, dropout_prob = self.extract_hyper_parameters()
@@ -173,5 +174,5 @@ if __name__ == "__main__":
                                        train_requirement["batch_size"],
                                        True,
                                        150,
-                                       torch.cuda.is_available())
+                                       is_gpu=torch.cuda.is_available())
     model = CapRNNModel(data_set, hyper_parameter, train_requirement)

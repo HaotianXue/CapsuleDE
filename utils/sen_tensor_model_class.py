@@ -6,7 +6,6 @@ Author: Haotian Xue
 from abc import abstractmethod
 from tensor_model_class import TensorModel
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
@@ -115,6 +114,23 @@ class SenTensorModel(TensorModel):
             print('Accuracy score: ', accuracy_score(y_true.numpy(), y_pred.numpy()))
         print("-----Finish testing-----")
         self.model.train(True)
+
+    def error_checking(self):
+        # TODO: for each mis-classified sentence, print it out
+        model = self.load_model()
+        model.eval()
+        data_set = self.dataset.error_check_data_set
+        data_loader = DataLoader(data_set, batch_size=1, shuffle=False)
+        with torch.no_grad():
+            for i, data in enumerate(data_loader):
+                tokens, label = data
+                output = model(tokens)
+                _, predicted = torch.max(output.data, 1)  # predicted shape: [batch=1, 1]
+                if predicted != label:
+                    origin_tokens = data_set.tokens[i]
+                    print("Got missed classification here!")
+                    print("Ground truth: ", label, " predicted: ", predicted)
+                    print("origin sentence: ", origin_tokens)
 
     def save_model(self):
         print("-----Start saving trained model-----")
