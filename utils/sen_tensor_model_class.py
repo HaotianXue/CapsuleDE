@@ -122,7 +122,7 @@ class SenTensorModel(TensorModel):
         data_set = self.dataset.error_check_data_set
         # data_loader = DataLoader(data_set, batch_size=1, shuffle=False)
         with torch.no_grad():
-            for i, data in enumerate(self.test_data_set):
+            for i, data in enumerate(self.dataset.error_check_iter):
                 tokens, label = data.sents, data.label
                 output = model(tokens)
                 _, predicted = torch.max(output.data, 1)  # predicted shape: [batch=1, 1]
