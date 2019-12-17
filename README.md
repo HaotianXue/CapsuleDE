@@ -8,6 +8,8 @@ Task: Given a sentence, tell if it is definitional.
 
 Dataset: SemEval2020 Task6 Dataset
 
+Results of all models: https://docs.google.com/spreadsheets/d/1vgcH6rOkrOY9ApE03D2DbhO_He2Yru2v0DRnnth6xrc/edit#gid=0
+
 Best Model(so far): 
 
 ML: XGBoost F1-score: 64.689%
@@ -22,6 +24,7 @@ Following is the tree formed during XGBoosting.
 ![GitHub Logo](/img/1400_tfidf_tree.png)
 
 DL: LSTM + Capsule F1-score: 76.977%
+
 
 
 
