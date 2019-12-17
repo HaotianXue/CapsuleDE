@@ -10,7 +10,9 @@ Dataset: SemEval2020 Task6 Dataset
 
 Results of all models: https://docs.google.com/spreadsheets/d/1vgcH6rOkrOY9ApE03D2DbhO_He2Yru2v0DRnnth6xrc/edit#gid=0
 
-Best Model(so far): 
+Best Model(so far):
+
+DL: LSTM + Capsule F1-score: 76.977%
 
 ML: XGBoost F1-score: 64.689%
 Feature Selection:
@@ -23,7 +25,6 @@ Here is the image of AUC's of both train and test sets while rounds goes up.
 Following is the tree formed during XGBoosting.
 ![GitHub Logo](/img/1400_tfidf_tree.png)
 
-DL: LSTM + Capsule F1-score: 76.977%
 
 
 
