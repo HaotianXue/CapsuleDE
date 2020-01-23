@@ -12,7 +12,7 @@ Results of all models: https://docs.google.com/spreadsheets/d/1vgcH6rOkrOY9ApE03
 
 Best Model(so far):
 
-DL: LSTM + Capsule F1-score: 76.977%
+DL: Bert(fine-tunned) + Capsule F1-score: 78.23%
 
 ML: XGBoost F1-score: 64.689%
 Feature Selection:
