@@ -1,10 +1,10 @@
-# Definition_Extraction
+# CapsuleDE
 
 ## Authors: Haotian Xue, Zirong Chen(github: RexZChen)
 
 SemEval2020 Task6 Subtask 1
 
-Task: Given a sentence, tell if it is definitional.
+Task: Definition Extraction: Given a sentence, tell if it is definitional.
 
 Dataset: SemEval2020 Task6 Dataset
 
